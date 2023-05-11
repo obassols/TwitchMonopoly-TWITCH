@@ -3,7 +3,7 @@ require("dotenv").config();
  */
 /* const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const TWITCH_ACCESS_TOKEN = process.env.TWITCH_ACCESS_TOKEN; */
-const CHANNEL_NAME = 'oriolbn20';
+const CHANNEL_NAME = 'RiotGames';
 const players = [];
 const tmi = require('tmi.js');
 
@@ -23,9 +23,9 @@ client.on('message', (channel, tags, message, self) => {
   if (self || !message.startsWith('!')) {
     console.log(`${tags['display-name']}: ${message}`);
     if (players.includes(tags['display-name'].toLowerCase())) {
-      console.log('Is a player');
+      // console.log('Is a player');
     } else {
-      console.log('Is not a player');
+      // console.log('Is not a player');
     }
   } else {
     const args = message.slice(1).split(' ');
@@ -39,7 +39,7 @@ function runCommand(command, args, tags) {
     if (!players.includes(tags['display-name'].toLowerCase())) {
       if (players.length < 4) {
         players.push(tags['display-name'].toLowerCase());
-        console.log('Added player' + tags['display-name'].toLowerCase());
+        console.log('Added player: ' + tags['display-name'].toLowerCase());
         console.log(players);
       } else {
         console.log('Cannot add more players');
