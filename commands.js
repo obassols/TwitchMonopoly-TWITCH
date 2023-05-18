@@ -1,9 +1,26 @@
-function join(players, tags) {
-  if (!players.includes(tags['display-name'].toLowerCase())) {
-    if (players.length < 3) {
-      players.push(tags['display-name'].toLowerCase());
-      console.log('Added player: ' + tags['display-name'].toLowerCase());
-      console.log(players);
+const monopoly = require('./monopoly');
+
+function players(players) {
+  if (players.length > 0) {
+    console.log('Players: ' + players);
+  } else {
+    console.log('No players');
+  }
+}
+
+function join(game, tags) {
+  const name = tags['display-name'].toLowerCase();
+  if (game.players.filter(p => p.name == name).length == 0) {
+    const missingPlayers = game.players.filter(p => p.money == -1).length;
+    if (!game.playing && missingPlayers > 0) {
+      const player = game.players[game.players.length - missingPlayers];
+      player.name = name;
+      player.money = 1500;
+      console.log('Added player: ' + player.name);
+      if (missingPlayers == 1) {
+        console.log('Starting game');
+        game.playing = true;
+      }
     } else {
       console.log('Cannot add more players');
     }
@@ -12,49 +29,122 @@ function join(players, tags) {
   }
 }
 
-function leave(players, tags) {
-  if (players.includes(tags['display-name'].toLowerCase())) {
-    players.splice(players.indexOf(tags['display-name'].toLowerCase()), 1);
-    console.log('Removed player: ' + tags['display-name'].toLowerCase());
-    console.log(players);
+function leave(game, tags) {
+  if (!game.playing) {
+    const name = tags['display-name'].toLowerCase();
+    const playerIndex = game.players.findIndex(p => p.name == name);
+    game.players[playerIndex].name = 'Waiting...';
+    game.players[playerIndex].money = -1;
+    console.log('Removed player: ' + name);
   } else {
-    console.log('Player not in list');
+    console.log('Game is already started');
   }
 }
 
-function players(players, tags) {
-  if (players.length > 0) {
-    console.log('Players: ' + players);
-  } else {
-    console.log('No players');
+function roll(game, tags) {
+  const player = isActualPlayer(game, tags);
+  if (player) {
+    monopoly.roll(game);
   }
 }
 
-function buy (players, tags, args) {
-  if (players.includes(tags['display-name'].toLowerCase())) {
-    console.log('Player is in list');
-    console.log('Player: ' + tags['display-name'].toLowerCase());
-    console.log('Item: ' + args[0]);
+function pay(game, tags) {
+  const player = isActualPlayer(game, tags);
+  if (player) {
+    monopoly.pay(game, player);
+  }
+}
+
+function buy(game, tags) {
+  const player = isActualPlayer(game, tags);
+  if (player) {
+    monopoly.buy(game, player);
+  }
+}
+
+function upgrade(game, tags) {
+  const player = isActualPlayer(game, tags);
+  if (player) {
+    monopoly.upgrade(game, player);
+  }
+}
+
+function downgrade(game, tags) {
+  const player = isActualPlayer(game, tags);
+  if (player) {
+    monopoly.downgrade(game, player);
+  }
+}
+
+function mortgage(game, tags) {
+  const player = isActualPlayer(game, tags);
+  if (player) {
+    monopoly.mortgage(game, player);
+  }
+}
+
+function unmortgage(game, tags) {
+  const player = isActualPlayer(game, tags);
+  if (player) {
+    monopoly.unmortgage(game, player);
+  }
+}
+
+function jailcard(game, tags) {
+  const player = isActualPlayer(game, tags);
+  if (player) {
+    monopoly.jailcard(game, player);
+  }
+}
+
+function skip(game, tags) {
+  const player = isActualPlayer(game, tags);
+  if (player) {
+    monopoly.skip(game);
+  }
+}
+
+function forfait(game, tags) {
+  const player = isActualPlayer(game, tags);
+  if (player) {
+    game.players = game.players.filter(p => p.id != player.id);
+    if (game.actualPlayer > game.players.length - 1) {
+      game.actualPlayer = 0;
+    }
+    console.log('Player forfait: ' + player.name);
+    const index = require('./index');
+    index.updateGame(game);
+  }
+}
+
+function isActualPlayer(game, tags) {
+  console.log(game);
+  const player = game.players.filter(p => p.name == tags['display-name'].toLowerCase())[0];
+  if (player) {
+    console.log('Player: ' + player.name);
+    if (game.players[game.actualPlayer].id == player.id) {
+      return player;
+    } else {
+      console.log('Not your turn');
+    }
   } else {
     console.log('Player is not in list');
   }
+  return null;
 }
-
-function sell (players, tags, args) {
-  if (players.includes(tags['display-name'].toLowerCase())) {
-    console.log('Player is in list');
-    console.log('Player: ' + tags['display-name'].toLowerCase());
-    console.log('Item: ' + args[0]);
-  } else {
-    console.log('Player is not in list');
-  }
-}
-
 
 module.exports = {
+  players,
   join,
   leave,
-  players,
+  roll,
+  pay,
   buy,
-  sell
+  upgrade,
+  downgrade,
+  mortgage,
+  unmortgage,
+  jailcard,
+  skip,
+  forfait
 };
