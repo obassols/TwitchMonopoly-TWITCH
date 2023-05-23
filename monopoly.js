@@ -11,8 +11,9 @@ function pay(game) {
   const player = game.players[game.actualPlayer];
   const square = game.actualSquare;
   if (square.type == 'property' || square.type == 'station' || square.type == 'supply') {
-    const owner = game.players.find(p => p.name == square.owner);
-    let rent = square.rents[square.upgrades];
+    const owner = game.players.find(p => p.id == square.owner);
+    console.log(owner);
+    let rent = square.rents.find(r => r.upgrades == square.upgrades).rent;
     if (square.type == 'supply') {
       dices = game.dice[0] + game.dice[1];
       rent = rent * dices;
@@ -186,11 +187,6 @@ function skip(game) {
 
   if (player.jail) {
     console.log('IN JAIL');
-    if (player.jailTime == 0) {
-      console.log('FIRST TIME IN JAIL');
-    } else {
-      console.log('MORE TIME IN JAIL');
-    }
     player.jailTime++;
   } else if (game.actualSquare.type == 'go_to_jail') {
     console.log('GO TO JAIL');
@@ -423,7 +419,7 @@ function calcCardActions(game) {
 function calcUpgrades(game, player) {
   const square = game.squares.find(s => s.id == player.position);
   if (square.type == 'property') {
-    square.upgrades = 1;
+    square.upgrades = 0;
   } else if (square.type == 'station' || square.type == 'supply') {
     const ownedStations = player.properties.filter(p => p.type == square.type);
     ownedStations.forEach(s => {

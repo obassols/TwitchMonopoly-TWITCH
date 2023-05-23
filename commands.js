@@ -118,7 +118,6 @@ function forfeit(game, tags) {
 }
 
 function isActualPlayer(game, tags) {
-  console.log(game);
   const player = game.players.filter(p => p.name == tags['display-name'].toLowerCase())[0];
   if (player) {
     console.log('Player: ' + player.name);
