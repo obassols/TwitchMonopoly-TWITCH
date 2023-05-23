@@ -104,14 +104,14 @@ function skip(game, tags) {
   }
 }
 
-function forfait(game, tags) {
+function forfeit(game, tags) {
   const player = isActualPlayer(game, tags);
   if (player) {
     game.players = game.players.filter(p => p.id != player.id);
     if (game.actualPlayer > game.players.length - 1) {
       game.actualPlayer = 0;
     }
-    console.log('Player forfait: ' + player.name);
+    console.log('Player forfeit: ' + player.name);
     const index = require('./index');
     index.updateGame(game);
   }
@@ -146,5 +146,5 @@ module.exports = {
   unmortgage,
   jailcard,
   skip,
-  forfait
+  forfeit
 };

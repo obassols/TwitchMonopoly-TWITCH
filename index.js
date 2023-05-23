@@ -82,7 +82,7 @@ const baseGame = {
   actualPlayer: 0,
   actualSquare: null,
   actualCard: null,
-  actions: ['roll', 'forfait'],
+  actions: ['roll', 'forfeit'],
   playing: false,
 }
 let game = JSON.parse(JSON.stringify(baseGame));
@@ -120,7 +120,7 @@ io.on("connection", socket => {
   socket.on('kickPlayer', (id) => {
     const player = game.players.find(p => p.id == id);
     if (player) {
-      monopoly.forfait(game, player);
+      monopoly.forfeit(game, player);
       console.log('Player kicked');
     } else {
       console.log('Player not found');
@@ -161,8 +161,8 @@ io.on("connection", socket => {
             case 'skip':
               monopoly.skip(game);
               break;
-            case 'forfait':
-              monopoly.forfait(game, game.players[game.actualPlayer]);
+            case 'forfeit':
+              monopoly.forfeit(game, game.players[game.actualPlayer]);
               break;
             default:
               console.log('Action not found');
@@ -266,9 +266,9 @@ function runCommand(command, args, tags) {
         commands.skip(game, tags);
       }
       break;
-    case 'forfait':
-      if (isPlayer(tags) && game.actions.includes('forfait')) {
-        commands.forfait(game, tags);
+    case 'forfeit':
+      if (isPlayer(tags) && game.actions.includes('forfeit')) {
+        commands.forfeit(game, tags);
       }
       break;
     default:
