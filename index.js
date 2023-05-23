@@ -241,6 +241,16 @@ function runCommand(command, args, tags) {
         commands.buy(game, tags, args);
       }
       break;
+    case 'upgrade':
+      if (isPlayer(tags) && game.actions.includes('upgrade')) {
+        commands.upgrade(game, tags);
+      }
+      break;
+    case 'downgrade':
+      if (isPlayer(tags) && game.actions.includes('downgrade')) {
+        commands.downgrade(game, tags);
+      }
+      break;
     case 'mortgage':
       if (isPlayer(tags) && game.actions.includes('mortgage')) {
         commands.mortgage(game, tags, args);
