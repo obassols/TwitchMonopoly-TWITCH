@@ -44,7 +44,6 @@ function getCard(game, type) {
   const url = 'http://' + serverUrl + ':' + port + '/card/random/' + type;
   request(url, { json: true }, (err, res, body) => {
     if (err) { return console.log(err); }
-    console.log(body);
     game.actualCard = body;
     const monopoly = require('./monopoly');
     monopoly.calcCardActions(game);

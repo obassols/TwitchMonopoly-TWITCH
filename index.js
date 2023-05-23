@@ -119,11 +119,12 @@ io.on("connection", socket => {
 
   socket.on('kickPlayer', (id) => {
     const player = game.players.find(p => p.id == id);
-    game.players = game.players.filter(p => p.id != id);
-    if (game.actualPlayer > game.players.length - 1) {
-      game.actualPlayer = 0;
+    if (player) {
+      monopoly.forfait(game, player);
+      console.log('Player kicked');
+    } else {
+      console.log('Player not found');
     }
-    console.log('Kicked player: ' + player.name);
     io.emit('game', game);
   });
 
