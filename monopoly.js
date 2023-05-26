@@ -4,7 +4,16 @@ function roll(game) {
   const dice1 = Math.floor(Math.random() * 6) + 1;
   const dice2 = Math.floor(Math.random() * 6) + 1;
   game.dice = [dice1, dice2];
-  calcMovePlayer(game);
+  const player = game.players[game.actualPlayer];
+  if (!player.jail && player.doublesCount == 2 && dice1 == dice2) {
+    console.log('JAIL 3 DOUBLES');
+    sendToJail(player);
+    game.actions = ['skip', 'forfeit'];
+    const index = require('./index');
+    index.updateGame(game);
+  } else {
+    calcMovePlayer(game);
+  }
 }
 
 function pay(game) {
@@ -191,9 +200,13 @@ function skip(game) {
   } else if (game.actualSquare.type == 'go_to_jail') {
     console.log('GO TO JAIL');
     sendToJail(player);
+    player.jailTime++;
   } else if (game.dice[0] == game.dice[1]) {
     console.log('DOUBLE DICE');
     game.actualPlayer--;
+    player.doublesCount++;
+  } else {
+    player.doublesCount = 0;
   }
 
   game.actualSquare = null;
@@ -234,6 +247,7 @@ async function calcMovePlayer(game) {
     console.log('Dice: ' + game.dice[0] + ' ' + game.dice[1]);
     if (game.dice[0] == game.dice[1]) {
       player.jail = false;
+      player.jailTime = 0;
       movePlayer(game, game.dice[0] + game.dice[1]);
     } else {
       if (player.jailTime > 2) {
@@ -321,7 +335,7 @@ async function calcActions(game) {
         if (square.type == 'property'
           && colorSquares.every(s => s.owner == player.id)
           && player.money >= square.housePrice) {
-          if (square.upgrades == 1) {
+          if (square.upgrades == 0) {
             game.actions = ['upgrade', 'mortgage', 'skip', 'forfeit'];
           } else if (square.upgrades == 5) {
             game.actions = ['downgrade', 'mortgage', 'skip', 'forfeit'];
@@ -329,7 +343,7 @@ async function calcActions(game) {
             game.actions = ['upgrade', 'downgrade', 'mortgage', 'skip', 'forfeit'];
           }
         } else {
-          game.actions = ['skip', 'forfeit'];
+          game.actions = ['skip', 'mortgage', 'forfeit'];
         }
       }
     } else {
@@ -390,14 +404,15 @@ function calcCardActions(game) {
     case 'ADVANCE':
       setTimeout(() => {
         movePlayerTo(game, game.actualCard.square);
-      }, 5000);
+      }, 10000);
       game.actions = [];
       break;
     case 'ADVANCE_CONDITIONAL':
       setTimeout(() => {
         movePlayer(game, game.actualCard.amount);
-      }, 5000);
+      }, 10000);
       game.actions = [];
+      break;
     case 'FREE_JAIL':
       const player = game.players[game.actualPlayer];
       player.cards.push(game.actualCard);
@@ -432,6 +447,7 @@ function sendToJail(player) {
   player.jail = true;
   player.jailTime = 0;
   player.position = 11;
+  player.doublesCount = 0;
 }
 
 module.exports = {

@@ -25,6 +25,7 @@ const basePlayers = [
     right: 4,
     jail: false,
     jailTime: 0,
+    doublesCount: 0,
   },
   {
     id: 2,
@@ -40,6 +41,7 @@ const basePlayers = [
     right: 1,
     jail: false,
     jailTime: 0,
+    doublesCount: 0,
   },
   {
     id: 3,
@@ -55,6 +57,7 @@ const basePlayers = [
     right: 4,
     jail: false,
     jailTime: 0,
+    doublesCount: 0,
   },
   {
     id: 4,
@@ -70,6 +73,7 @@ const basePlayers = [
     right: 1,
     jail: false,
     jailTime: 0,
+    doublesCount: 0,
   },
 ];
 const baseGame = {
