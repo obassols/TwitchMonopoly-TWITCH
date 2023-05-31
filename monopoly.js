@@ -8,7 +8,10 @@ function roll(game) {
   if (!player.jail && player.doublesCount == 2 && dice1 == dice2) {
     console.log('JAIL 3 DOUBLES');
     sendToJail(player);
-    game.actions = ['skip', 'forfeit'];
+    setTimeout(() => {
+      skip(game);
+    }, 6000);
+    game.actions = [];
     const index = require('./index');
     index.updateGame(game);
   } else {
@@ -19,9 +22,18 @@ function roll(game) {
 function pay(game) {
   const player = game.players[game.actualPlayer];
   const square = game.actualSquare;
-  if (square.type == 'property' || square.type == 'station' || square.type == 'supply') {
+  if (player.jail) {
+    if (player.money >= 50) {
+      player.money -= 50;
+      player.jail = false;
+      player.jailTime = 0;
+      console.log('Player paid to get out of jail');
+      calcMovePlayer(game);
+    } else {
+      console.log('Player has no money');
+    }
+  } else if (square.type == 'property' || square.type == 'station' || square.type == 'supply') {
     const owner = game.players.find(p => p.id == square.owner);
-    console.log(owner);
     let rent = square.rents.find(r => r.upgrades == square.upgrades).rent;
     if (square.type == 'supply') {
       dices = game.dice[0] + game.dice[1];
@@ -31,40 +43,52 @@ function pay(game) {
       player.money -= rent;
       owner.money += rent;
       console.log('Rent: ' + rent);
-      game.actions = ['skip', 'forfeit'];
+      setTimeout(() => {
+        skip(game);
+      }, 6000);
+      game.actions = [];
     } else {
       console.log('Player has no money');
       console.log('Player money: ' + player.money);
       console.log('Rent: ' + rent);
+      forfeit(game, player);
     }
   } else if (square.type == 'tax') {
     if (player.money >= square.amount) {
       player.money -= square.amount;
       game.taxes += square.amount;
       console.log('Tax: ' + square.amount);
-      game.actions = ['skip', 'forfeit'];
+      setTimeout(() => {
+        skip(game);
+      }, 6000);
+      game.actions = [];
     } else {
       console.log('Player has no money');
       console.log('Player money: ' + player.money);
       console.log('Tax: ' + square.amount);
+      forfeit(game, player);
     }
   } else if (game.actualCard) {
     if (game.actualCard.action == 'PAY') {
       if (player.money >= game.actualCard.amount) {
         player.money -= game.actualCard.amount;
         console.log('Card: ' + game.actualCard.amount);
-        game.actions = ['skip', 'forfeit'];
+        setTimeout(() => {
+          skip(game);
+        }, 6000);
+        game.actions = [];
       } else {
         console.log('Player has no money');
         console.log('Player money: ' + player.money);
         console.log('Card: ' + game.actualCard.amount);
+        forfeit(game, player);
       }
     } else if (game.actualCard.action == 'PAY_CONDITIONAL') {
       const ownedProperties = player.properties.filter(p => p.type == 'property');
       let amount = 0;
       ownedProperties.forEach(p => {
-        if (p.upgrades > 1 && p.upgrades < 5) {
-          amount += p.amountHouse * (p.upgrades - 1);
+        if (p.upgrades > 0 && p.upgrades < 5) {
+          amount += p.amountHouse * p.upgrades;
         } else if (p.upgrades == 5) {
           amount += p.amountHotel;
         }
@@ -72,16 +96,18 @@ function pay(game) {
       if (player.money >= amount) {
         player.money -= amount;
         console.log('Card: ' + amount);
-        game.actions = ['skip', 'forfeit'];
+        setTimeout(() => {
+          skip(game);
+        }, 6000);
+        game.actions = [];
       } else {
         console.log('Player has no money');
         console.log('Player money: ' + player.money);
         console.log('Card: ' + amount);
+        forfeit(game, player);
       }
     }
   }
-  const index = require('./index');
-  index.updateGame(game);
 }
 
 function buy(game, player) {
@@ -187,12 +213,11 @@ function jailCard(game) {
   player.cards = player.cards.slice(1);
   player.jail = false;
   player.jailTime = 0;
-  skip(game);
+  calcMovePlayer(game);
 }
 
 function skip(game) {
   const player = game.players[game.actualPlayer];
-  console.log(player);
 
   if (player.jail) {
     console.log('IN JAIL');
@@ -251,15 +276,19 @@ async function calcMovePlayer(game) {
       movePlayer(game, game.dice[0] + game.dice[1]);
     } else {
       if (player.jailTime > 2) {
-        player.money -= 50;
-        player.jailTime = 0;
-        player.jail = false;
-        movePlayer(game, game.dice[0] + game.dice[1]);
+        if (player.money >= 50) {
+          player.money -= 50;
+          player.jailTime = 0;
+          player.jail = false;
+          movePlayer(game, game.dice[0] + game.dice[1]);
+        } else {
+          forfeit(game, player);
+        }
       } else {
         if (player.cards.length > 0) {
-          game.actions = ['jailcard', 'skip', 'forfeit'];
+          game.actions = ['jailcard', 'pay', 'skip', 'forfeit'];
         } else {
-          game.actions = ['skip', 'forfeit'];
+          game.actions = ['skip', 'pay', 'forfeit'];
         }
         const index = require('./index');
         index.updateGame(game);
@@ -290,7 +319,6 @@ async function movePlayer(game, amount) {
   }
 
   console.log('Player position: ' + player.position);
-  console.log(game.actualSquare);
   calcActions(game);
 }
 
@@ -350,23 +378,35 @@ async function calcActions(game) {
       console.log('Player does not own this square');
       if (square.state == 'mortgaged') {
         console.log('Square is mortgaged');
-        game.actions = ['skip', 'forfeit'];
+        setTimeout(() => {
+          skip(game);
+        }, 6000);
+        game.actions = [];
       } else {
         console.log('Square is not mortgaged');
-        game.actions = ['pay', 'forfeit'];
+        pay(game);
       }
     }
 
   } else if (square.type == 'tax') {
-    game.actions = ['pay', 'forfeit'];
-  } else if (square.type == 'go_to_jail') {
-    game.actions = ['skip', 'forfeit'];
+    game.actions = [];
+    pay(game);
+  } else if (square.type == 'free_parking') {
+    game.players[game.actualPlayer].money += game.taxes;
+    game.taxes = 0;
+    game.actions = [];
+    setTimeout(() => {
+      skip(game);
+    }, 6000);
+    game.actions = [];
   } else if (square.type == 'chance' || square.type == 'community_chest') {
     api.getCard(game, square.type.toUpperCase());
   } else {
-    game.actions = ['skip', 'forfeit'];
+    setTimeout(() => {
+      skip(game);
+    }, 6000);
+    game.actions = [];
   }
-  console.log('Actions: ' + game.actions);
   const index = require('./index');
   index.updateGame(game);
 }
@@ -376,7 +416,8 @@ function calcCardActions(game) {
   switch (game.actualCard.action) {
     case 'PAY':
       if (game.actualCard.amount > 0) {
-        game.actions = ['pay', 'forfeit'];
+        game.actions = [];
+        pay(game);
       } else {
         if (game.actualCard.target == 'PLAYER') {
           game.players.forEach(p => {
@@ -387,6 +428,7 @@ function calcCardActions(game) {
                 console.log('Player: ' + p.name + ' has no money');
                 console.log('Player money: ' + p.money);
                 console.log('Card: ' + game.actualCard.amount);
+                forfeit(game, p);
               }
             } else {
               p.money -= game.actualCard.amount * (game.players.length - 1);
@@ -395,38 +437,46 @@ function calcCardActions(game) {
         } else {
           game.players[game.actualPlayer].money -= game.actualCard.amount;
         }
-        game.actions = ['skip', 'forfeit'];
+        setTimeout(() => {
+          skip(game);
+        }, 6000);
+        game.actions = [];
       }
       break;
     case 'PAY_CONDITIONAL':
-      game.actions = ['pay', 'forfeit'];
+      pay(game);
       break;
     case 'ADVANCE':
       setTimeout(() => {
         movePlayerTo(game, game.actualCard.square);
-      }, 10000);
+      }, 8000);
       game.actions = [];
       break;
     case 'ADVANCE_CONDITIONAL':
       setTimeout(() => {
         movePlayer(game, game.actualCard.amount);
-      }, 10000);
+      }, 8000);
       game.actions = [];
       break;
     case 'FREE_JAIL':
       const player = game.players[game.actualPlayer];
       player.cards.push(game.actualCard);
-      game.actions = ['skip', 'forfeit'];
+      setTimeout(() => {
+        skip(game);
+      }, 6000);
+      game.actions = [];
       break;
     case 'JAIL':
       sendToJail(game.players[game.actualPlayer]);
-      game.actions = ['skip', 'forfeit'];
+      setTimeout(() => {
+        skip(game);
+      }, 6000);
+      game.actions = [];
       break;
     default:
       console.log('Action not found');
       break;
   }
-  console.log('Card Actions: ' + game.actions);
   const index = require('./index');
   index.updateGame(game);
 }
