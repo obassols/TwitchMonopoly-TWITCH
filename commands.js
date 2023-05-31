@@ -1,13 +1,5 @@
 const monopoly = require('./monopoly');
 
-function players(players) {
-  if (players.length > 0) {
-    console.log('Players: ' + players);
-  } else {
-    console.log('No players');
-  }
-}
-
 function join(game, tags) {
   const name = tags['display-name'].toLowerCase();
   if (game.players.filter(p => p.name == name).length == 0) {
@@ -133,7 +125,6 @@ function isActualPlayer(game, tags) {
 }
 
 module.exports = {
-  players,
   join,
   leave,
   roll,

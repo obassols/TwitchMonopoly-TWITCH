@@ -160,7 +160,7 @@ io.on("connection", socket => {
               monopoly.unmortgage(game, game.players[game.actualPlayer]);
               break;
             case 'jailcard':
-              monopoly.jailcard(game, game.players[game.actualPlayer]);
+              monopoly.jailCard(game);
               break;
             case 'skip':
               monopoly.skip(game);
@@ -217,9 +217,6 @@ client.on('message', (channel, tags, message, self) => {
 
 function runCommand(command, args, tags) {
   switch (args[0]) {
-    case 'players':
-      commands.players(game.players);
-      break;
     case 'join':
       commands.join(game, tags);
       io.emit('game', game);
